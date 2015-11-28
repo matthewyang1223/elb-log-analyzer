@@ -1,0 +1,4 @@
+boto
+slacker==0.7.9
+ujson
+
