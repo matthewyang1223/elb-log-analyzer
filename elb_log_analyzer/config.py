@@ -15,4 +15,4 @@ __all__ = ['setting']
 setting = ConfigParser()
 env = os.environ.get('ELB_LOG_ENV', 'development')
 cwd = os.path.dirname(os.path.abspath(__file__))
-setting.read(os.path.join(cwd, env + '.ini'))
+setting.read(os.path.join(cwd, '..', env + '.ini'))
