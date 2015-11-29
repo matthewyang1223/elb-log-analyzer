@@ -6,7 +6,7 @@
 from slacker import Slacker
 
 # local library imports
-from config import setting
+from elb_log_analyzer.config import setting
 
 
 class BaseActor(object):

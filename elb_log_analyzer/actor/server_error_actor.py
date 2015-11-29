@@ -5,8 +5,8 @@
 # third party related imports
 
 # local library imports
-from base_actor import BaseActor
-from config import setting
+from elb_log_analyzer.actor.base_actor import BaseActor
+from elb_log_analyzer.config import setting
 
 
 class ServerErrorActor(BaseActor):
