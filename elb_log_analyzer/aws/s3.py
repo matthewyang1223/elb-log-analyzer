@@ -26,3 +26,17 @@ class S3(object):
         k = Key(self.bucket)
         k.key = key_name
         k.get_contents_to_filename(output_fn)
+
+
+if __name__ == '__main__':
+
+    from contextlib import closing
+    from tempfile import NamedTemporaryFile
+
+    s3 = S3('kono-lb-logs')
+    with closing(NamedTemporaryFile()) as f:
+        s3.download(
+            'optimus-prime/AWSLogs/127634673729/ELBAccessLogTestFile',
+            f.name
+        )
+        print f.read()
