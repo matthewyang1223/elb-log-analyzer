@@ -5,7 +5,6 @@
 # third party related imports
 from mock import patch
 from mock import MagicMock
-import ujson
 import unittest2 as unittest
 
 # local library imports
@@ -19,19 +18,13 @@ class TestDownloadElbLog(unittest.TestCase):
 
     def setUp(self):
 
-        self.event = {
-            's3': {
-                'bucket': {'name': 'a-bucket'},
-                'object': {'key': 'an-object'}
-            }
-        }
-        self.handler = ElbLogEventHandler('{}')
+        self.handler = ElbLogEventHandler(MagicMock())
 
     @patch(module + '.S3')
     def test_call(self, mock_s3_cls):
 
         mock_s3_cls.return_value = mock_s3_obj = MagicMock()
-        self.handler.download_elb_log(self.event, '/somewhere')
+        self.handler.download_elb_log('a-bucket', 'an-object', '/somewhere')
 
         mock_s3_cls.assert_called_with('a-bucket')
         mock_s3_obj.download.assert_called_with('an-object', '/somewhere')
@@ -55,7 +48,10 @@ class TestHandle(unittest.TestCase):
 
     def setUp(self):
 
-        self.handler = ElbLogEventHandler('{"Records": [{}]}')
+        self.s3_event = MagicMock()
+        self.s3_event.objects = [('a-bucket', 'an-object')]
+
+        self.handler = ElbLogEventHandler(self.s3_event)
         mock_actor = MagicMock()
         self.handler.actors = [mock_actor]
 
@@ -68,9 +64,10 @@ class TestHandle(unittest.TestCase):
         mock_parse_elb_log.return_value = [mock_api_record]
 
         self.handler.handle()
-        self.assertEqual(mock_download_elb_log.call_args[0][0], {})
+        self.assertEqual(mock_download_elb_log.call_args[0][0], 'a-bucket')
+        self.assertEqual(mock_download_elb_log.call_args[0][1], 'an-object')
         self.assertEqual(
-            mock_download_elb_log.call_args[0][1],
+            mock_download_elb_log.call_args[0][2],
             mock_parse_elb_log.call_args[0][0]
         )
         self.handler.actors[0].notify.assert_called_with(mock_api_record)
