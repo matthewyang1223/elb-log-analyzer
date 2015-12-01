@@ -59,3 +59,5 @@ target/
 development.ini
 production.ini
 *.swp
+elb_log_analyzer/logstash/logstash-2.1.0
+elb_log_analyzer/logstash/routes_spec
