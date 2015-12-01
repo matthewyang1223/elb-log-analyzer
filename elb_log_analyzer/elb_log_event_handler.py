@@ -10,6 +10,7 @@ import ujson
 # local library imports
 from elb_log_analyzer.actor.server_error_actor import ServerErrorActor
 from elb_log_analyzer.aws.s3 import S3
+from elb_log_analyzer.logger import logger
 from elb_log_analyzer.logstash.logstash import Logstash
 
 
@@ -40,4 +41,8 @@ class ElbLogEventHandler(object):
 
     def parse_elb_log(self, raw_log_fn):
 
-        return Logstash().parse(raw_log_fn)
+        logger.info('Logstash starts...')
+        ret = Logstash().parse(raw_log_fn)
+        logger.info('Logstash finished')
+
+        return ret

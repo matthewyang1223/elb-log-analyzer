@@ -8,6 +8,7 @@ from boto.s3.key import Key
 
 # local library imports
 from elb_log_analyzer.config import setting
+from elb_log_analyzer.logger import logger
 
 
 class S3(object):
@@ -26,6 +27,8 @@ class S3(object):
         k = Key(self.bucket)
         k.key = key_name
         k.get_contents_to_filename(output_fn)
+
+        logger.info('Download %s -> %s', key_name, output_fn)
 
 
 if __name__ == '__main__':
