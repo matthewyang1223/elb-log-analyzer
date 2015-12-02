@@ -7,6 +7,7 @@
 # local library imports
 from elb_log_analyzer.actor.base_actor import BaseActor
 from elb_log_analyzer.config import setting
+from elb_log_analyzer.logger import logger
 
 
 class ServerErrorActor(BaseActor):
@@ -29,13 +30,20 @@ class ServerErrorActor(BaseActor):
 
         ctrl_action = api_record.get('rails', {}).get('controller#action', '')
 
-        self.slack.chat.post_message(
-            setting.get('slack', 'channel'),
-            'Server error [%(ctrl_action)s]' % locals(),
-            username='Optimus Prime Watchdog',
-            attachments=self._make_attachments(api_record),
-            icon_url=setting.get('slack', 'icon')
-        )
+        for attempt in xrange(5):
+            try:
+                self.slack.chat.post_message(
+                    setting.get('slack', 'channel'),
+                    'Server error [%(ctrl_action)s]' % locals(),
+                    username='Optimus Prime Watchdog',
+                    attachments=self._make_attachments(api_record),
+                    icon_url=setting.get('slack', 'icon')
+                )
+                break
+
+            except Exception as e:
+                logger.exception(e)
+                logger.error('Slack API failed, try again')
 
     def _make_attachments(self, api_record):
 
