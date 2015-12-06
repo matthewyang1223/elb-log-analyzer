@@ -2,3 +2,4 @@ boto
 slacker==0.7.9
 ujson
 jinja2==2.8
+eventlet==0.17.4
