@@ -34,16 +34,19 @@ sudo ./plugin install shield
 ```
 
 - Create an admin user
+
     ```
     cd /usr/share/elasticsearch/bin/shield
     esusers useradd admin-user -r admin
     ```
 - Create a logstash user so that he can write logstash data into elasticsearch
+
     ```
     cd /usr/share/elasticsearch/bin/shield
     esusers useradd logstash-user -r logstash
     ```
 - Create a read-only role for logstash in `/etc/elasticsearch/shield/roles.yml`
+
     ```
     logstash_user:
       indices:
@@ -51,6 +54,7 @@ sudo ./plugin install shield
           privileges: read
     ```
 - Enable anonymous access for elasticsearch in `/etc/elasticsearch/elasticsearch.yml`
+
     ```
     shield.authc:
       anonymous:
@@ -64,6 +68,7 @@ sudo ./plugin install shield
 - [Reference 1](https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-ubuntu-14-04)
 - [Reference 2](https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-elasticsearch-on-ubuntu-14-04)
 - If only one instance, we can set only one shard no replica in `/etc/elasticsearch/elasticsearch.yml`
+
     ```
     index.number_of_shards: 1
     index.number_of_replicas: 0
@@ -82,6 +87,7 @@ sudo apt-get -y install logstash
 
 #### Configuration
 - Install `logstash-filter-railsroutes` plugin
+
     ```
     cd /opt/logstash/bin
     sudo ./plugin install logstash-filter-railsroutes
