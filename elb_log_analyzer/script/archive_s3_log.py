@@ -37,7 +37,7 @@ def init_arg_parser():
     ret.add_argument(
         '-d',
         '--date',
-        help='Specify what date (%Y-%m-%d) to archive. Default is yesterday.',
+        help='Specify what date (%%Y-%%m-%%d) to archive. Default is yesterday.',
         default=(date.today() - date.resolution).isoformat()
     )
 
