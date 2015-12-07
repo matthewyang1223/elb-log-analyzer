@@ -93,3 +93,12 @@ sudo apt-get -y install logstash
             - `password`: use `logstash` user created in shield
 - Put `routes_spec` in appropriate place
 - Put `sincedb` of `logstash-input-s3` in appropriate place
+
+
+## Scripts
+### archive_s3_log.py
+- Archive access log stored in S3 of a date.
+- `python archive_s3_log.py [-h] [-d DATE]`
+- optional arguments:
+    - `-h`, `--help`: show this help message and exit
+    - `-d DATE`, `--date DATE`: Specify what date (%Y-%m-%d) to archive. Default is yesterday.
