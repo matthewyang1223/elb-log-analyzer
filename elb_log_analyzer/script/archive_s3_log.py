@@ -37,7 +37,8 @@ def init_arg_parser():
     ret.add_argument(
         '-d',
         '--date',
-        help='Specify what date (%%Y-%%m-%%d) to archive. Default is yesterday.',
+        help=('Specify what date (%%Y-%%m-%%d) to archive. '
+              'Default is yesterday.'),
         default=(date.today() - date.resolution).isoformat()
     )
 
@@ -90,6 +91,10 @@ def main():
 
     with TempDir() as tempdir:
         key_names = download_logs_of_a_date(args.date, tempdir)
+
+        if len(key_names) == 0:
+            logger.warn('Cannot find any log on %s', args.date)
+            return
 
         with closing(NamedTemporaryFile(suffix='.zip')) as zip_file:
             ZipCompressor.compress(tempdir, zip_file.name)
