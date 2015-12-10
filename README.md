@@ -53,9 +53,10 @@ sudo ./plugin install shield
         'logstash-*':
           privileges: read
     ```
-- Enable anonymous access for elasticsearch in `/etc/elasticsearch/elasticsearch.yml`
+- ~~Enable anonymous access for elasticsearch in `/etc/elasticsearch/elasticsearch.yml`~~
 
     ```
+    # If use Kibana, this may cause some problems
     shield.authc:
       anonymous:
         roles: logstash_user  # the read-only role
@@ -107,4 +108,21 @@ sudo apt-get -y install logstash
 - `python archive_s3_log.py [-h] [-d DATE]`
 - optional arguments:
     - `-h`, `--help`: show this help message and exit
-    - `-d DATE`, `--date DATE`: Specify what date (%Y-%m-%d) to archive. Default is yesterday.
+    - `-d DATE`, `--date DATE`: Specify what date (`%Y-%m-%d`) to archive. Default is yesterday.
+
+
+### delete_old_logs.py
+- Dispose old access log.
+- `python delete_old_logs.py [-h] [-d DATE]`
+- optional arguments:
+    - `-h`, `--help`: show this help message and exit
+    - `-d DATE`, `--date DATE`: Specify what date (%Y-%m-%d) to delete. Default is 30 days ago.
+
+
+### server_error_alarm.py
+- Find all server error events and report via slack.
+- `python server_error_alarm.py [-h] [-b BEGIN] [-e END]`
+- optional arguments:
+    - `-h`, `--help`: show this help message and exit
+    - `-b BEGIN`, `--begin BEGIN`: Specify when (`%Y-%m-%dT%H:%M:%S`) to scan. Default is 10 minutes ago.
+    - `-e END`, `--end END`: Specify when (`%Y-%m-%dT%H:%M:%S`) to stop scanning. Default is 5 minutes ago.
