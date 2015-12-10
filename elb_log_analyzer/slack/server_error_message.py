@@ -27,7 +27,7 @@ class ServerErrorMessage(BaseSlackMessage):
             str(self.api_record['elb_status_code']),
             str(self.api_record['backend_status_code']),
             self.api_record.get('api', {}).get('http_verb', ''),
-            self.api_record.get('api', {}).get('uri', '')
+            self.api_record.get('api', {}).get('path', '')
         ])
 
         return [
@@ -37,4 +37,3 @@ class ServerErrorMessage(BaseSlackMessage):
                 'text': self.api_record['message']
             }
         ]
-
