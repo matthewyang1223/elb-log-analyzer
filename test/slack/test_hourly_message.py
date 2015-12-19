@@ -25,5 +25,19 @@ class TestGetIndexName(unittest.TestCase):
         end_at = datetime(2016, 1, 2)
         hm = HourlyMessage(begin_at, end_at)
         self.assertEqual(
-            hm.get_index_name(), 'logstash-2016.01.01,logstash-2016.01.02'
+            hm.get_index_name(),
+            'logstash-2016.01.01,logstash-2016.01.02'
+        )
+
+
+class TestGetText(unittest.TestCase):
+
+    def test_call(self):
+
+        begin_at = datetime(2016, 1, 1)
+        end_at = datetime(2016, 1, 1, 1)
+        hm = HourlyMessage(begin_at, end_at)
+        self.assertEqual(
+            hm.get_text(),
+            'Brief report [2016-01-01T00:00:00 ~ 2016-01-01T01:00:00]'
         )
