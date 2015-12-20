@@ -7,7 +7,7 @@
 # local library imports
 
 
-class RangeQuery(object):
+class RangeClause(object):
 
     def __init__(self, field, min_val=None, max_val=None):
 

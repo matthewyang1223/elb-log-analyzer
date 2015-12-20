@@ -8,7 +8,7 @@ from calendar import timegm
 # local library imports
 
 
-class TimeRangeQuery(object):
+class TimeRangeClause(object):
 
     def __init__(self, field='timestamp', begin_time=None, end_time=None):
 
