@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # standard library imports
-import calendar
+from calendar import timegm
 from datetime import datetime, timedelta
 
 # third party related imports
@@ -31,8 +31,9 @@ class BaseTimeRangeQuery(BaseQuery):
     def get_index_name(self):
 
         # normalize to datetime object
-        d = datetime.combine(self.begin_at.date(), datetime.min.time())
-        e = datetime.utcfromtimestamp(calendar.timegm(self.end_at.timetuple()))
+        normalize = lambda d: datetime.utcfromtimestamp(timegm(d.timetuple()))
+        d = normalize(normalize(self.begin_at).date())
+        e = normalize(self.end_at)
         day = timedelta(days=1)
         span = []
 
