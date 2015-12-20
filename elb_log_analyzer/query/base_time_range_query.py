@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 # standard library imports
-from datetime import timedelta
+import calendar
+from datetime import datetime, timedelta
 
 # third party related imports
 
@@ -10,8 +11,18 @@ from elb_log_analyzer.query.base_query import BaseQuery
 
 
 class BaseTimeRangeQuery(BaseQuery):
+    """Base class for time range query class.
+
+    It is used for query documents: `begin_at` <= field < `end_at`.
+    """
 
     def __init__(self, begin_at, end_at):
+        """Constructor
+
+        Args:
+            begin_at: A datetime.date, datetime.datetime object.
+            end_at: A datetime.date, datetime.datetime object.
+        """
 
         super(BaseTimeRangeQuery, self).__init__()
         self.begin_at = begin_at
@@ -19,12 +30,13 @@ class BaseTimeRangeQuery(BaseQuery):
 
     def get_index_name(self):
 
-        d = self.begin_at.date()
-        e = self.end_at.date()
+        # normalize to datetime object
+        d = datetime.combine(self.begin_at.date(), datetime.min.time())
+        e = datetime.utcfromtimestamp(calendar.timegm(self.end_at.timetuple()))
         day = timedelta(days=1)
         span = []
 
-        while d <= e:
+        while d < e:
             span.append(d)
             d += day
 
