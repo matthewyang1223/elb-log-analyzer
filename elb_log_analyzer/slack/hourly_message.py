@@ -12,6 +12,7 @@ from elb_log_analyzer.clause.time_range_clause import TimeRangeClause
 from elb_log_analyzer.config import setting
 from elb_log_analyzer.logger import logger
 from elb_log_analyzer.slack.base_slack_message import BaseSlackMessage
+from elb_log_analyzer.query.apdex_query import ApdexQuery
 from elb_log_analyzer.query.avg_response_time_query import AvgResponseTimeQuery
 from elb_log_analyzer.query.request_count_query import RequestCountQuery
 
@@ -122,42 +123,8 @@ class HourlyMessage(BaseSlackMessage):
 
     def get_apdex(self):
 
-        body = {
-            'filter': {
-                'bool': {
-                    'filter': [
-                        self._build_timestamp_filter(),
-                        self._build_value_filter(
-                            'backend_processing_time',
-                            max_val=self.APDEX_THRESHOLD
-                        )
-                    ]
-                }
-            }
-        }
-        result = self.es.count(index=self.index_name, body=body)
-        logger.info(result)
-        satisfied = result.get('count', 0)
-
-        body = {
-            'filter': {
-                'bool': {
-                    'filter': [
-                        self._build_timestamp_filter(),
-                        self._build_value_filter(
-                            'backend_processing_time',
-                            min_val=self.APDEX_THRESHOLD,
-                            max_val=self.APDEX_THRESHOLD * 4
-                        )
-                    ]
-                }
-            }
-        }
-        result = self.es.count(index=self.index_name, body=body)
-        logger.info(result)
-        tolerating = result.get('count', 0)
-
-        return (satisfied + 0.5 * tolerating) / self.get_request_count()
+        aq = ApdexQuery(self.begin_at, self.end_at, self.APDEX_THRESHOLD)
+        return aq.query()
 
     def get_http_status_code_count(self, num):
 
