@@ -1,20 +1,15 @@
 #!/usr/bin/env python
 
 # standard library imports
-from datetime import timedelta
 
 # third party related imports
-from elasticsearch import Elasticsearch
 
 # local library imports
-from elb_log_analyzer.clause.range_clause import RangeClause
-from elb_log_analyzer.clause.time_range_clause import TimeRangeClause
-from elb_log_analyzer.config import setting
-from elb_log_analyzer.logger import logger
 from elb_log_analyzer.slack.base_slack_message import BaseSlackMessage
 from elb_log_analyzer.query.apdex_query import ApdexQuery
 from elb_log_analyzer.query.avg_response_time_query import AvgResponseTimeQuery
 from elb_log_analyzer.query.request_count_query import RequestCountQuery
+from elb_log_analyzer.query.status_code_count_query import StatusCodeCountQuery
 
 
 class HourlyMessage(BaseSlackMessage):
@@ -24,23 +19,8 @@ class HourlyMessage(BaseSlackMessage):
     def __init__(self, begin_at, end_at):
 
         super(HourlyMessage, self).__init__()
-        self.es = Elasticsearch(setting.get('elasticsearch', 'url'))
         self.begin_at = begin_at
         self.end_at = end_at
-        self.index_name = self.get_index_name()
-
-    def get_index_name(self):
-
-        d = self.begin_at.date()
-        e = self.end_at.date()
-        day = timedelta(days=1)
-        span = []
-
-        while d <= e:
-            span.append(d)
-            d += day
-
-        return ','.join(['logstash-' + s.strftime('%Y.%m.%d') for s in span])
 
     def get_text(self):
 
@@ -86,28 +66,33 @@ class HourlyMessage(BaseSlackMessage):
 
     def make_status_code_report(self):
 
+        success = StatusCodeCountQuery.SUCCESS
+        redirection = StatusCodeCountQuery.REDIRECTION
+        client_error = StatusCodeCountQuery.CLIENT_ERROR
+        server_error = StatusCodeCountQuery.SERVER_ERROR
+
         return {
             'color': '#fbb034',
             'title': 'HTTP sumary',
             'fields': [
                 {
                     'title': '2XX',
-                    'value': self.get_http_status_code_count(200),
+                    'value': self.get_http_status_code_count(success),
                     'short': True
                 },
                 {
                     'title': '3XX',
-                    'value': self.get_http_status_code_count(300),
+                    'value': self.get_http_status_code_count(redirection),
                     'short': True
                 },
                 {
                     'title': '4XX',
-                    'value': self.get_http_status_code_count(400),
+                    'value': self.get_http_status_code_count(client_error),
                     'short': True
                 },
                 {
                     'title': '5XX',
-                    'value': self.get_http_status_code_count(500),
+                    'value': self.get_http_status_code_count(server_error),
                     'short': True
                 }
             ]
@@ -126,32 +111,11 @@ class HourlyMessage(BaseSlackMessage):
         aq = ApdexQuery(self.begin_at, self.end_at, self.APDEX_THRESHOLD)
         return aq.query()
 
-    def get_http_status_code_count(self, num):
+    def get_http_status_code_count(self, status_code_class):
 
-        body = {
-            'filter': {
-                'bool': {
-                    'filter': [
-                        self._build_timestamp_filter(),
-                        self._build_value_filter(
-                            'backend_status_code',
-                            num,
-                            num + 100
-                        )
-                    ]
-                }
-            }
-        }
-        result = self.es.count(index=self.index_name, body=body)
-        logger.info(result)
-
-        return result.get('count', 0)
-
-    def _build_timestamp_filter(self):
-
-        trq = TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at)
-        return trq.get_clause()
-
-    def _build_value_filter(self, field, min_val=None, max_val=None):
-
-        return RangeClause(field, min_val, max_val).get_clause()
+        sccq = StatusCodeCountQuery(
+            self.begin_at,
+            self.end_at,
+            status_code_class
+        )
+        return sccq.query()
