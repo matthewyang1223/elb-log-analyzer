@@ -21,6 +21,7 @@ class HourlyMessage(BaseSlackMessage):
         super(HourlyMessage, self).__init__()
         self.begin_at = begin_at
         self.end_at = end_at
+        self._request_count = None
 
     def get_text(self):
 
@@ -73,7 +74,7 @@ class HourlyMessage(BaseSlackMessage):
 
         return {
             'color': '#fbb034',
-            'title': 'HTTP sumary',
+            'title': 'HTTP summary',
             'fields': [
                 {
                     'title': '2XX',
@@ -100,7 +101,13 @@ class HourlyMessage(BaseSlackMessage):
 
     def get_request_count(self):
 
-        return RequestCountQuery(self.begin_at, self.end_at).query()
+        if self._request_count is not None:
+            return self._request_count
+
+        rcq = RequestCountQuery(self.begin_at, self.end_at)
+        self._request_count = rcq.query()
+
+        return self._request_count
 
     def get_avg_response_time(self):
 
