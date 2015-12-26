@@ -126,3 +126,11 @@ sudo apt-get -y install logstash
     - `-h`, `--help`: show this help message and exit
     - `-b BEGIN`, `--begin BEGIN`: Specify when (`%Y-%m-%dT%H:%M:%S`) to scan. Default is 10 minutes ago.
     - `-e END`, `--end END`: Specify when (`%Y-%m-%dT%H:%M:%S`) to stop scanning. Default is 5 minutes ago.
+
+### hourly_report.py
+- Dump hourly report.
+- `python hourly_report.py [-h] [-b BEGIN] [-e END]`
+- optionsal arguments:
+    - `-h`, `--help`: show this help message and exit
+    - `-b BEGIN`, `--begin BEGIN`: Specify when (`%Y-%m-%dT%H:%M:%S`) to scan. Default is 1 hour before the top of this hour.
+    - `-e END`, `--end END`: Specify when (`%Y-%m-%dT%H:%M:%S`) to stop scanning. Default is the top of this hour.
