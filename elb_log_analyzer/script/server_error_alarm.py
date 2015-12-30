@@ -27,15 +27,15 @@ def init_arg_parser():
         '-b',
         '--begin',
         help=('Specify when (%%Y-%%m-%%dT%%H:%%M:%%S) to scan. '
-              'Default is 10 minutes ago.'),
-        default=(now - minute * 10).isoformat()
+              'Default is 15 minutes ago.'),
+        default=(now - minute * 15).isoformat()
     )
     ret.add_argument(
         '-e',
         '--end',
         help=('Specify when (%%Y-%%m-%%dT%%H:%%M:%%S) to stop scanning. '
-              'Default is 5 minutes ago.'),
-        default=(now - minute * 5).isoformat()
+              'Default is 10 minutes ago.'),
+        default=(now - minute * 10).isoformat()
     )
 
     return ret
