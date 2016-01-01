@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # standard library imports
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # third party related imports
 from mock import patch
@@ -15,6 +15,18 @@ from elb_log_analyzer.slack.hourly_message import HourlyMessage
 
 module = 'elb_log_analyzer.slack.hourly_message'
 
+
+class TestGetMinutes(unittest.TestCase):
+
+    def setUp(self):
+
+        b = datetime.now()
+        e = b + timedelta(seconds=1)
+        self.hm = HourlyMessage(b, e)
+
+    def test_call(self):
+
+        self.assertEqual(self.hm.get_minutes(), 1)
 
 class TestGetText(unittest.TestCase):
 
