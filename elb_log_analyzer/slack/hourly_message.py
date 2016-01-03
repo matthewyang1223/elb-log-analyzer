@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # standard library imports
+import math
 
 # third party related imports
 
@@ -22,6 +23,11 @@ class HourlyMessage(BaseSlackMessage):
         self.begin_at = begin_at
         self.end_at = end_at
         self._request_count = None
+
+    def get_minutes(self):
+
+        delta = self.end_at - self.begin_at
+        return math.ceil(delta.total_seconds() / 60.0)
 
     def get_text(self):
 
@@ -54,7 +60,9 @@ class HourlyMessage(BaseSlackMessage):
                 },
                 {
                     'title': 'Throughput',
-                    'value': '%.2f rpm' % (self.get_request_count() / 60.0),
+                    'value': '%.2f rpm' % (
+                        1.0 * self.get_request_count() / self.get_minutes()
+                    ),
                     'short': True
                 },
                 {
