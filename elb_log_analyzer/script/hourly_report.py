@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Find all server error events within a time frame and report via slack."""
+"""Hourly report."""
 
 # standard library imports
 import argparse
@@ -15,7 +15,7 @@ from elb_log_analyzer.slack.hourly_message import HourlyMessage
 def init_arg_parser():
 
     ret = argparse.ArgumentParser(
-        description='Find all server error events and report via slack.'
+        description='Hourly report.'
     )
     hour = timedelta(hours=1)
     top_of_hour = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
