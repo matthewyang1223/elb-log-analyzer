@@ -147,7 +147,7 @@ class TestMakeApdexReport(unittest.TestCase):
                 'fields': [
                     dict(title='Req count', value=100, short=True),
                     dict(title='Avg resp time', value='100.00 ms', short=True),
-                    dict(title='Throughput', value='1.67 rpm', short=True),
+                    dict(title='Throughput', value='0.07 rpm', short=True),
                     dict(title='Apdex (0.05)', value='0.75', short=True)
                 ]
             }
