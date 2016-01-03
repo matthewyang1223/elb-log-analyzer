@@ -116,7 +116,7 @@ sudo apt-get -y install logstash
 - `python delete_old_logs.py [-h] [-d DATE]`
 - optional arguments:
     - `-h`, `--help`: show this help message and exit
-    - `-d DATE`, `--date DATE`: Specify what date (%Y-%m-%d) to delete. Default is 30 days ago.
+    - `-d DATE`, `--date DATE`: Specify what date (`%Y-%m-%d`) to delete. Default is 30 days ago.
 
 
 ### server_error_alarm.py
@@ -134,3 +134,10 @@ sudo apt-get -y install logstash
     - `-h`, `--help`: show this help message and exit
     - `-b BEGIN`, `--begin BEGIN`: Specify when (`%Y-%m-%dT%H:%M:%S`) to scan. Default is 1 hour before the top of this hour.
     - `-e END`, `--end END`: Specify when (`%Y-%m-%dT%H:%M:%S`) to stop scanning. Default is the top of this hour.
+
+### daily_report.py
+- Dump daily report.
+- `python daily_report.py [-h] [-d DATE]`
+- optional arguments:
+    - `-h`, `--help`: show this help message and exit
+    - `-d DATE`, `--date DATE`: Specify which date (%Y-%m-%d) to make report. Default is yesterday.
