@@ -155,3 +155,19 @@ class TestMakeSlowestApiReport(unittest.TestCase):
                 ]
             }
         )
+
+
+class TestGetAttachments(unittest.TestCase):
+
+    def setUp(self):
+
+        self.d = date(2016, 1, 1)
+        self.dm = DailyMessage(self.d)
+
+    def test(self):
+
+        self.dm.make_apdex_report = MagicMock(return_value=1)
+        self.dm.make_status_code_report = MagicMock(return_value=2)
+        self.dm.make_popular_api_report = MagicMock(return_value=3)
+        self.dm.make_slowest_api_report = MagicMock(return_value=4)
+        self.assertEqual(self.dm.get_attachments(), [1, 2, 3, 4])
