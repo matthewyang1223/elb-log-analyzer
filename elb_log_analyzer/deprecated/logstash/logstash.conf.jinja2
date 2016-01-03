@@ -1,0 +1,59 @@
+input {
+  stdin {}
+}
+
+filter {
+  grok {
+    match => [
+      "message",
+      '%{TIMESTAMP_ISO8601:timestamp} %{NOTSPACE:loadbalancer} %{IP:client_ip}:%{NUMBER:client_port:int} %{IP:backend_ip}:%{NUMBER:backend_port:int} %{NUMBER:request_processing_time:float} %{NUMBER:backend_processing_time:float} %{NUMBER:response_processing_time:float} %{NUMBER:elb_status_code:int} %{NUMBER:backend_status_code:int} %{NUMBER:received_bytes:int} %{NUMBER:sent_bytes:int} "%{WORD:http_verb} %{URI:url} HTTP/%{NUMBER:http_version}" "%{GREEDYDATA:agent}"'
+    ]
+  }
+  ruby {
+    code => '
+      require "uri"
+      uri = URI(event["url"])
+      o = event["api"] = {}
+      o["http_verb"] = event["http_verb"]
+      o["uri"] = event["url"]
+      o["path"] = event["_path"] = uri.path
+      o["query_string"] = uri.query
+    '
+    remove_field => ["url", "port", "http_version"]
+  }
+  railsroutes {
+    verb_source => 'http_verb'
+    uri_source => '_path'
+    routes_spec => '{{route_spec_name}}'
+    api_prefix => '/KPI2'
+    target => 'rails'
+    remove_field => ["_path", "http_verb"]
+  }
+  useragent {
+    source => "agent"
+    target => "useragent"
+  }
+  ruby {
+    code => 'event["useragent"]["agent"] = event["agent"]'
+    remove_field => "agent"
+  }
+  geoip {
+    source => "client_ip"
+  }
+  date {
+    match => ["timestamp", "ISO8601"]
+  }
+}
+
+output {
+  stdout {
+    codec => rubydebug
+  }
+  file {
+    path => "{{output_name}}"
+    codec => json
+  }
+  elasticsearch {
+    hosts => ['localhost:9200']
+  }
+}
