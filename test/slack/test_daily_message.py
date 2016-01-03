@@ -86,24 +86,24 @@ class TestMakePopularApiReport(unittest.TestCase):
                 'fields': [
                     {
                         'title': 'api2',
-                        'short': True,
+                        'short': False,
                         'value': (
-                            '• count: 1000\n'
-                            '• min: 1000.00 ms\n'
-                            '• max: 10000.00 ms\n'
-                            '• μ: 5000.00 ms\n'
-                            '• σ: 2500.00 ms'
+                            'count: 1000, '
+                            'min: 1000.00 ms, '
+                            'max: 10000.00 ms, '
+                            'μ: 5000.00 ms, '
+                            'σ: 2500.00 ms'
                         )
                     },
                     {
                         'title': 'api1',
-                        'short': True,
+                        'short': False,
                         'value': (
-                            '• count: 100\n'
-                            '• min: 100.00 ms\n'
-                            '• max: 1000.00 ms\n'
-                            '• μ: 500.00 ms\n'
-                            '• σ: 250.00 ms'
+                            'count: 100, '
+                            'min: 100.00 ms, '
+                            'max: 1000.00 ms, '
+                            'μ: 500.00 ms, '
+                            'σ: 250.00 ms'
                         )
                     }
                 ]
@@ -132,24 +132,24 @@ class TestMakeSlowestApiReport(unittest.TestCase):
                 'fields': [
                     {
                         'title': 'api2',
-                        'short': True,
+                        'short': False,
                         'value': (
-                            '• count: 1000\n'
-                            '• min: 1000.00 ms\n'
-                            '• max: 10000.00 ms\n'
-                            '• μ: 5000.00 ms\n'
-                            '• σ: 2500.00 ms'
+                            'count: 1000, '
+                            'min: 1000.00 ms, '
+                            'max: 10000.00 ms, '
+                            'μ: 5000.00 ms, '
+                            'σ: 2500.00 ms'
                         )
                     },
                     {
                         'title': 'api1',
-                        'short': True,
+                        'short': False,
                         'value': (
-                            '• count: 100\n'
-                            '• min: 100.00 ms\n'
-                            '• max: 1000.00 ms\n'
-                            '• μ: 500.00 ms\n'
-                            '• σ: 250.00 ms'
+                            'count: 100, '
+                            'min: 100.00 ms, '
+                            'max: 1000.00 ms, '
+                            'μ: 500.00 ms, '
+                            'σ: 250.00 ms'
                         )
                     }
                 ]

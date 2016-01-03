@@ -91,12 +91,12 @@ class ApiStat(BaseApiStat):
 
         return {
             'title': self.controller_action,
-            'short': True,
-            'value': '\n'.join([
-                '• count: %d' % self.count,
-                '• min: %.2f ms' % (self.min * 1000),
-                '• max: %.2f ms' % (self.max * 1000),
-                '• μ: %.2f ms' % (self.avg * 1000),
-                '• σ: %.2f ms' % (self.std_deviation * 1000)
+            'short': False,
+            'value': ', '.join([
+                'count: %d' % self.count,
+                'min: %.2f ms' % (self.min * 1000),
+                'max: %.2f ms' % (self.max * 1000),
+                'μ: %.2f ms' % (self.avg * 1000),
+                'σ: %.2f ms' % (self.std_deviation * 1000)
             ])
         }
