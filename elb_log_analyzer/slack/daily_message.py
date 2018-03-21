@@ -37,45 +37,44 @@ class DailyMessage(HourlyMessage):
 
     def make_popular_api_report(self):
 
-        api_extended_stats = self.get_api_extended_stats()
-        api_extended_stats.sort(key=lambda a: -1 * a.count)
+        aesq = ApiExtendedStatQuery(
+            self.target_date,
+            self.target_date + DAY,
+            'count',
+            False,
+            10
+        )
+        api_stats = self.build_api_stats_from_bucket(aesq.query())
 
         return {
             'color': '#ffdd00',
             'title': 'Top 10 popular API',
-            'fields': [a.to_field() for a in api_extended_stats[:10]]
+            'fields': [a.to_field() for a in api_stats]
         }
 
     def make_slowest_api_report(self):
 
-        api_extended_stats = self.get_api_extended_stats()
-        api_extended_stats.sort(key=lambda a: -1 * a.avg)
+        aesq = ApiExtendedStatQuery(
+            self.target_date,
+            self.target_date + DAY,
+            'avg',
+            False,
+            10
+        )
+        api_stats = self.build_api_stats_from_bucket(aesq.query())
 
         return {
             'color': '#c1d82f',
             'title': 'Top 10 slowest API',
-            'fields': [a.to_field() for a in api_extended_stats[:10]]
+            'fields': [a.to_field() for a in api_stats]
         }
 
-    def get_api_extended_stats(self):
+    def build_api_stats_from_bucket(self, buckets):
 
-        if self._api_extended_stats is not None:
-            return self._api_extended_stats
-
-        aesq = ApiExtendedStatQuery(self.target_date, self.target_date + DAY)
-        result = aesq.query()
-        api_stats = []
-
-        for r in result:
-            api_stats.append(
-                ApiStat(
-                    r['key'],
-                    *(r['stats'][f] for f in ApiStat._fields[1:])
-                )
-            )
-
-        self._api_extended_stats = api_stats
-        return self._api_extended_stats
+        return [
+            ApiStat(b['key'], *[b['stats'][f] for f in ApiStat._fields[1:]])
+            for b in buckets
+        ]
 
 
 BaseApiStat = namedtuple(
