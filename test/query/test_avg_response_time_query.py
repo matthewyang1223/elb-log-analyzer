@@ -38,12 +38,27 @@ class TestQuery(unittest.TestCase):
         self.mock_es.search.assert_called_with(
             index='logstash-2016.01.01',
             body = {
-                'filter': trc.get_clause(),
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {
+                                'range': {
+                                    'timestamp': {
+                                        'gte': 1451606400000,
+                                        'lt': 1451692800000
+                                    }
+                                }
+                            },
+                            {'exists': {'field': 'rails.controller#action'}},
+                            {'term': {'domain_name': 'api.thekono.com'}},
+                            {'range': {'backend_processing_time': {'gte': 0}}}
+                        ]
+                    }
+                },
+                'size': 0,
                 'aggs': {
                     'avg_resp_time': {
-                        'avg': {
-                            'field': 'backend_processing_time'
-                        }
+                        'avg': {'field': 'backend_processing_time'}
                     }
                 }
             }
