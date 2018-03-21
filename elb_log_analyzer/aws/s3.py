@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 # standard library imports
+from contextlib import closing
 import mimetypes
 
 # third party related imports
-import boto.s3
-from boto.s3.key import Key
+import boto3
+from retrying import retry
 
 # local library imports
 from elb_log_analyzer.component.measure_time import measure_time
@@ -21,56 +22,42 @@ class S3(object):
 
     def __init__(self, bucket_name):
 
-        self.conn = boto.s3.connect_to_region(
-            setting.get('elb_log_s3', 'region'),
-            aws_access_key_id=setting.get('aws', 'access_key'),
-            aws_secret_access_key=setting.get('aws', 'secret_key')
-        )
-        self.bucket = self.conn.get_bucket(bucket_name)
+        region = setting.get('elb_log_s3', 'region')
+        self.client = boto3.client('s3', region_name=region)
+        self.bucket = bucket_name
 
     @measure_time
     def download(self, key_name, filename):
 
-        k = Key(self.bucket)
-        k.key = key_name
-        k.get_contents_to_filename(filename)
-
+        self.client.download_file(self.bucket, key_name, filename)
         logger.info('Download %s -> %s', key_name, filename)
 
     @measure_time
+    @retry(stop_max_attempt_number=5)
     def upload(self, key, filename, is_public=False, metadata=None):
 
-        k = Key(self.bucket)
-        k.key = key
-
-        headers = {'Cache-Control': 'max-age=31536000'}
         content_type, encoding = mimetypes.guess_type(filename)
-        if content_type is not None:
-            headers['Content-Type'] = content_type
-        if encoding == 'gzip':
-            headers['Content-Encoding'] = 'gzip'
 
-        if metadata is not None:
-            for key in metadata:
-                headers['x-amz-meta-' + key] = metadata[key]
+        with closing(open(filename)) as f:
+            params = {
+                'ACL': 'public-read' if is_public else 'private',
+                'Body': f,
+                'Bucket': self.bucket,
+                'CacheControl': 'max-age=31536000',
+                'Key': key
+            }
 
-        for _ in xrange(5):
-            try:
-                k.set_contents_from_filename(
-                    filename,
-                    headers=headers,
-                    policy=('public-read' if is_public else 'private')
-                )
-                logger.info('Upload %s -> %s', filename, k.name)
-                break
+            if content_type is not None:
+                params['ContentType'] = content_type
 
-            except Exception as e:
-                logger.exception(e)
-                logger.warn('Try upload again')
+            if encoding == 'gzip':
+                params['ContentEncoding'] = 'gzip'
 
-        else:
-            logger.error('Retry more than 5 times, give it up.')
-            raise ExceedMaxRetryError()
+            if metadata is not None:
+                params['Metadata'] = metadata.copy()
+
+            self.client.put_object(**params)
+            logger.info('Upload %s -> %s', filename, key)
 
 
 if __name__ == '__main__':
