@@ -1,4 +1,5 @@
-boto
+boto3==1.6.12
+retrying==1.3.3
 slacker==0.7.9
 ujson
 jinja2==2.8
