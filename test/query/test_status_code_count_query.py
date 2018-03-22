@@ -31,15 +31,28 @@ class TestQuery(unittest.TestCase):
 
     def test_call(self):
 
+        field = 'backend_status_code'
         self.assertEqual(self.sccq.query(), 1)
-
-        trc = TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at)
-        rc = RangeClause('backend_status_code', min_val=200, max_val=300)
         self.mock_es.count.assert_called_with(
             index='logstash-2016.01.01',
             body={
-                'filter': {
-                    'bool': {'filter': [trc.get_clause(), rc.get_clause()]}
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {
+                                'range': {
+                                    'timestamp': {
+                                        'gte': 1451606400000,
+                                        'lt': 1451692800000
+                                    }
+                                }
+                            },
+                            {'exists': {'field': 'rails.controller#action'}},
+                            {'term': {'domain_name': 'api.thekono.com'}},
+                            {'range': {'backend_processing_time': {'gte': 0}}},
+                            {'range': {field: {'gte': 200, 'lt': 300}}}
+                        ]
+                    }
                 }
             }
         )

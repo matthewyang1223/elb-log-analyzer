@@ -25,7 +25,7 @@ class ServerErrorMessage(BaseSlackMessage):
         fallback = ' '.join([
             self.api_record['timestamp'],
             str(self.api_record['elb_status_code']),
-            str(self.api_record['backend_status_code']),
+            str(self.api_record.get('backend_status_code', '-')),
             self.api_record.get('api', {}).get('http_verb', ''),
             self.api_record.get('api', {}).get('path', '')
         ])

@@ -3,6 +3,7 @@
 # standard library imports
 
 # third party related imports
+from retrying import retry
 from slacker import Slacker
 
 # local library imports
@@ -60,26 +61,25 @@ class BaseSlackMessage(object):
 
         return None
 
+    @retry(stop_max_attempt_number=5)
     def post(self):
 
-        for _ in xrange(5):
-            try:
-                self.slack.chat.post_message(
-                    self.get_channel(),
-                    self.get_text(),
-                    username=self.get_username(),
-                    as_user=self.get_as_user(),
-                    parse=self.get_parse(),
-                    link_names=self.get_link_names(),
-                    attachments=self.get_attachments(),
-                    unfurl_links=self.get_unfurl_links(),
-                    unfurl_media=self.get_unfurl_media(),
-                    icon_url=self.get_icon_url(),
-                    icon_emoji=self.get_icon_emoji()
-                )
-                break
+        try:
+            self.slack.chat.post_message(
+                self.get_channel(),
+                self.get_text(),
+                username=self.get_username(),
+                as_user=self.get_as_user(),
+                parse=self.get_parse(),
+                link_names=self.get_link_names(),
+                attachments=self.get_attachments(),
+                unfurl_links=self.get_unfurl_links(),
+                unfurl_media=self.get_unfurl_media(),
+                icon_url=self.get_icon_url(),
+                icon_emoji=self.get_icon_emoji()
+            )
 
-            except Exception as e:
-                logger.exception(e)
-                logger.error('Slack API failed, try again')
+        except Exception as e:
+            logger.exception(e)
+            logger.error('Slack API failed, try again')
 
