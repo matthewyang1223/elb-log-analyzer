@@ -44,16 +44,21 @@ def init_arg_parser():
     return ret
 
 
+def index_name(date):
+
+    return 'logstash-' + date.strftime('%Y.%m.%d')
+
+
 def query_server_error_records(begin_time, end_time):
 
     es_api = Elasticsearch(setting.get('elasticsearch', 'url'))
     indices = [
-        'logstash-' + (begin_time.date() + timedelta(n)).strftime('%Y.%m.%d')
+        index_name(begin_time.date() + timedelta(n))
         for n in xrange((end_time.date() - begin_time.date()).days)
     ]
     begin_at = timegm(begin_time.timetuple()) * 1000
     end_at = timegm(end_time.timetuple()) * 1000
-    index = indices = ','.join(indices)
+    index = ','.join(indices) if indices else index_name(begin_time.date())
     offset = 0
     results = []
     body = {
@@ -94,7 +99,6 @@ def main():
 
     begin_time = datetime.strptime(args.begin, '%Y-%m-%dT%H:%M:%S')
     end_time = datetime.strptime(args.end, '%Y-%m-%dT%H:%M:%S')
-
     api_records = query_server_error_records(begin_time, end_time)
 
     if not api_records:
