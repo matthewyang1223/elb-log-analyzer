@@ -9,8 +9,6 @@ from mock import MagicMock
 import unittest2 as unittest
 
 # local library imports
-from elb_log_analyzer.clause.range_clause import RangeClause
-from elb_log_analyzer.clause.time_range_clause import TimeRangeClause
 from elb_log_analyzer.query.apdex_query import ApdexQuery
 
 
@@ -36,16 +34,33 @@ class TestGetSatisfiedRequestCount(unittest.TestCase):
         mock_es.count.return_value = {'count': 100}
 
         self.assertEqual(self.aq.get_satisfied_request_count(), 100)
-
-        clauses = [
-            TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at),
-            RangeClause('backend_processing_time', max_val=0.1)
-        ]
-        clauses = map(lambda c: c.get_clause(), clauses)
-
         mock_es.count.assert_called_with(
             index='logstash-2016.01.01',
-            body={'filter': {'bool': {'filter': clauses}}}
+            body={
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {
+                                'range': {
+                                    'timestamp': {
+                                        'gte': 1451606400000,
+                                        'lt': 1451692800000
+                                    }
+                                }
+                            },
+                            {'exists': {'field': 'rails.controller#action'}},
+                            {'term': {'domain_name': 'api.thekono.com'}},
+                            {
+                                'range': {
+                                    'backend_processing_time': {
+                                        'gte': 0, 'lt': 0.1
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
         )
 
 
@@ -68,16 +83,33 @@ class TestGetToleratingRequestCount(unittest.TestCase):
         mock_es.count.return_value = {'count': 100}
 
         self.assertEqual(self.aq.get_tolerating_request_count(), 100)
-
-        clauses = [
-            TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at),
-            RangeClause('backend_processing_time', min_val=0.1, max_val=0.4)
-        ]
-        clauses = map(lambda c: c.get_clause(), clauses)
-
         mock_es.count.assert_called_with(
             index='logstash-2016.01.01',
-            body={'filter': {'bool': {'filter': clauses}}}
+            body={
+                'query': {
+                    'bool': {
+                        'filter': [
+                            {
+                                'range': {
+                                    'timestamp': {
+                                        'gte': 1451606400000,
+                                        'lt': 1451692800000
+                                    }
+                                }
+                            },
+                            {'exists': {'field': 'rails.controller#action'}},
+                            {'term': {'domain_name': 'api.thekono.com'}},
+                            {
+                                'range': {
+                                    'backend_processing_time': {
+                                        'gte': 0.1, 'lt': 0.4
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
         )
 
 

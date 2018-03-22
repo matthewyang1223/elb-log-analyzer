@@ -5,7 +5,9 @@
 # third party related imports
 
 # local library imports
+from elb_log_analyzer.clause.exist_clause import ExistClause
 from elb_log_analyzer.clause.range_clause import RangeClause
+from elb_log_analyzer.clause.term_clause import TermClause
 from elb_log_analyzer.clause.time_range_clause import TimeRangeClause
 from elb_log_analyzer.logger import logger
 from elb_log_analyzer.query.base_time_range_query import BaseTimeRangeQuery
@@ -35,24 +37,19 @@ class StatusCodeCountQuery(BaseTimeRangeQuery):
         if self._result is not None:
             return self._result
 
-        es = self.get_es()
-        trc = TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at)
-        rc = RangeClause(
-            'backend_status_code',
-            min_val=self.status_code_class,
-            max_val=self.status_code_class + 100
-        )
-        body = {
-            'filter': {
-                'bool': {
-                    'filter': [
-                        trc.get_clause(),
-                        rc.get_clause()
-                    ]
-                }
-            }
-        }
-        result = es.count(index=self.get_index_name(), body=body)
+        conds = [
+            TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at),
+            ExistClause('rails.controller#action'),
+            TermClause('domain_name', 'api.thekono.com'),
+            RangeClause('backend_processing_time', 0),
+            RangeClause(
+                'backend_status_code',
+                min_val=self.status_code_class,
+                max_val=self.status_code_class + 100
+            )
+        ]
+        body = {'query': {'bool': {'filter': [c.get_clause() for c in conds]}}}
+        result = self.get_es().count(index=self.get_index_name(), body=body)
         logger.info(result)
         self._result = result.get('count', 0)
 

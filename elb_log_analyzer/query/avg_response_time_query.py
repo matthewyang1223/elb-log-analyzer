@@ -5,6 +5,9 @@
 # third party related imports
 
 # local library imports
+from elb_log_analyzer.clause.exist_clause import ExistClause
+from elb_log_analyzer.clause.range_clause import RangeClause
+from elb_log_analyzer.clause.term_clause import TermClause
 from elb_log_analyzer.clause.time_range_clause import TimeRangeClause
 from elb_log_analyzer.logger import logger
 from elb_log_analyzer.query.base_time_range_query import BaseTimeRangeQuery
@@ -22,15 +25,19 @@ class AvgResponseTimeQuery(BaseTimeRangeQuery):
         if self._result is not None:
             return self._result
 
-        es = self.get_es()
-        trc = TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at)
+        field = 'backend_processing_time'
+        conditions = [
+            TimeRangeClause(begin_time=self.begin_at, end_time=self.end_at),
+            ExistClause('rails.controller#action'),
+            TermClause('domain_name', 'api.thekono.com'),
+            RangeClause(field, 0)
+        ]
         body = {
-            'filter': trc.get_clause(),
-            'aggs': {
-                'avg_resp_time': {'avg': {'field': 'backend_processing_time'}}
-            }
+            'query': {'bool': {'filter': [c.get_clause() for c in conditions]}},
+            'size': 0,
+            'aggs': {'avg_resp_time': {'avg': {'field': field}}}
         }
-        result = es.search(index=self.get_index_name(), body=body)
+        result = self.get_es().search(index=self.get_index_name(), body=body)
         logger.info(result)
         self._result = result['aggregations']['avg_resp_time']['value']
 

@@ -17,70 +17,65 @@ module = 'elb_log_analyzer.aws.s3'
 
 class TestDownload(unittest.TestCase):
 
-    @patch(module + '.boto.s3')
+    @patch(module + '.boto3')
     def setUp(self, mock_boto_s3_module):
 
         self.bucket_name = 'qq'
-        mock_boto_s3_module.connect_to_region.return_value = MagicMock()
         self.s3 = S3(self.bucket_name)
+        self.s3.client = MagicMock()
 
-    @patch(module + '.Key')
-    def test_call(self, mock_key_cls):
+    def test_call(self):
 
-        mock_key_cls.return_value = mock_key = MagicMock()
         self.s3.download('key_name', 'filename')
-
-        mock_key_cls.assert_called_with(self.s3.bucket)
-        self.assertEqual(mock_key.key, 'key_name')
-        mock_key.get_contents_to_filename.assert_called_with('filename')
+        self.s3.client.download_file.assert_called_with(
+            self.bucket_name,
+            'key_name',
+            'filename'
+        )
 
 
 class TestUpload(unittest.TestCase):
 
-    @patch(module + '.boto.s3')
-    def setUp(self, mock_boto_s3_module):
+    def setUp(self):
 
         self.bucket_name = 'qq'
-        mock_boto_s3_module.connect_to_region.return_value = MagicMock()
+
         self.s3 = S3(self.bucket_name)
+        self.s3.client = MagicMock()
 
         self.filename = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             'lena.jpg'
         )
 
-    @patch(module + '.Key')
-    def test_when_private(self, mock_key_cls):
+    @patch(module + '.open')
+    def test_when_private(self, mock_open):
 
-        mock_key_cls.return_value = mock_key = MagicMock()
+        mock_open.return_value = mock_file = MagicMock()
+
         self.s3.upload('key_name', self.filename, False, {'happy': ':)'})
-
-        mock_key_cls.assert_called_with(self.s3.bucket)
-        self.assertEqual(mock_key.key, 'key_name')
-        mock_key.set_contents_from_filename.assert_called_with(
-            self.filename,
-            headers={
-                'Cache-Control': 'max-age=31536000',
-                'Content-Type': 'image/jpeg',
-                'x-amz-meta-happy': ':)'
-            },
-            policy='private'
+        self.s3.client.put_object.assert_called_with(
+            ACL='private',
+            Body=mock_file,
+            Bucket=self.bucket_name,
+            CacheControl='max-age=31536000',
+            ContentType='image/jpeg',
+            Metadata={'happy': ':)'},
+            Key='key_name'
         )
 
-    @patch(module + '.Key')
-    def test_when_public(self, mock_key_cls):
+    @patch(module + '.open')
+    def test_when_public(self, mock_open):
 
-        mock_key_cls.return_value = mock_key = MagicMock()
+        mock_open.return_value = mock_file = MagicMock()
+
         self.s3.upload('key_name', self.filename, True, {'happy': ':)'})
-
-        mock_key_cls.assert_called_with(self.s3.bucket)
-        self.assertEqual(mock_key.key, 'key_name')
-        mock_key.set_contents_from_filename.assert_called_with(
-            self.filename,
-            headers={
-                'Cache-Control': 'max-age=31536000',
-                'Content-Type': 'image/jpeg',
-                'x-amz-meta-happy': ':)'
-            },
-            policy='public-read'
+        self.s3.client.put_object.assert_called_with(
+            ACL='public-read',
+            Body=mock_file,
+            Bucket=self.bucket_name,
+            CacheControl='max-age=31536000',
+            ContentType='image/jpeg',
+            Metadata={'happy': ':)'},
+            Key='key_name'
         )

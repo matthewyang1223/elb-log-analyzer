@@ -19,51 +19,8 @@ sudo apt-get -y install oracle-java8-installer
 ### Elasticsearch
 
 #### Install
-```
-wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-echo "deb http://packages.elastic.co/elasticsearch/2.x/debian stable main" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-2.x.list
-sudo apt-get update
-sudo apt-get -y install elasticsearch
-```
+We're targeting elasticsearch at version 6.2.x. Please see [here](https://www.elastic.co/guide/en/elasticsearch/reference/6.2/_installation.html) for the installation guide. Or, you can run elasticsearch on [Docker](https://www.elastic.co/guide/en/elasticsearch/reference/6.2/docker.html).
 
-#### Install shield
-```
-cd /usr/share/elasticsearch/bin
-sudo ./plugin install license
-sudo ./plugin install shield
-```
-
-- Create an admin user
-
-    ```
-    cd /usr/share/elasticsearch/bin/shield
-    esusers useradd admin-user -r admin
-    ```
-- Create a logstash user so that he can write logstash data into elasticsearch
-
-    ```
-    cd /usr/share/elasticsearch/bin/shield
-    esusers useradd logstash-user -r logstash
-    ```
-- Create a read-only role for logstash in `/etc/elasticsearch/shield/roles.yml`
-
-    ```
-    logstash_user:
-      indices:
-        'logstash-*':
-          privileges: read
-    ```
-- ~~Enable anonymous access for elasticsearch in `/etc/elasticsearch/elasticsearch.yml`~~
-
-    ```
-    # If use Kibana, this may cause some problems
-    shield.authc:
-      anonymous:
-        roles: logstash_user  # the read-only role
-        authz_exception: true
-    ```
-- Make sure `elasticsearch` user can access user information data
-    - Try `esusers list` using `elasticsearch` user identity
 
 #### Configuration
 - [Reference 1](https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-ubuntu-14-04)
@@ -79,15 +36,10 @@ sudo ./plugin install shield
 ### Logstash
 
 #### Install
-```
-wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-echo "deb http://packages.elastic.co/logstash/2.1/debian stable main" | sudo tee -a /etc/apt/sources.list
-sudo apt-get update
-sudo apt-get -y install logstash
-```
+We're targeting logstash at version 6.2.x. Please see [here](https://www.elastic.co/guide/en/logstash/6.2/installing-logstash.html) for the installation guide. Or, you can run logstash on [Docker](https://www.elastic.co/guide/en/logstash/6.2/docker.html).
 
 #### Configuration
-- Install `logstash-filter-railsroutes` plugin
+- Install `logstash-filter-railsroutes 0.2.0` plugin
 
     ```
     cd /opt/logstash/bin
