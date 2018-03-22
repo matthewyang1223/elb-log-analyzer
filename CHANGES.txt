@@ -1,3 +1,7 @@
+0.3.0 / 2018-03-22
+==================
+- Use elasticsearch 6.2.x.
+
 0.2.0 / 2016-01-04
 ==================
 - A script to dump daily report.
