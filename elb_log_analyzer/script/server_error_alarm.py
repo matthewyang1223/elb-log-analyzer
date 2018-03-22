@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch
 
 # local library imports
+from elb_log_analyzer.clause.exist_clause import ExistClause
+from elb_log_analyzer.clause.range_clause import RangeClause
+from elb_log_analyzer.clause.term_clause import TermClause
 from elb_log_analyzer.config import setting
 from elb_log_analyzer.logger import logger
 from elb_log_analyzer.slack.server_error_message import ServerErrorMessage
@@ -43,29 +46,26 @@ def init_arg_parser():
 
 def query_server_error_records(begin_time, end_time):
 
-    es = Elasticsearch(setting.get('elasticsearch', 'url'))
-    indices = []
-    day = timedelta(days=1)
-    d = begin_time.date()
-
-    while d <= end_time.date():
-        indices.append('logstash-' + d.strftime('%Y.%m.%d'))
-        d += day
-
+    es_api = Elasticsearch(setting.get('elasticsearch', 'url'))
+    indices = [
+        'logstash-' + (begin_time.date() + timedelta(n)).strftime('%Y.%m.%d')
+        for n in xrange((end_time.date() - begin_time.date()).days)
+    ]
     begin_at = timegm(begin_time.timetuple()) * 1000
     end_at = timegm(end_time.timetuple()) * 1000
     index = indices = ','.join(indices)
     offset = 0
     results = []
     body = {
-        'filter': {
+        'query': {
             'bool': {
-                'must': [
-                    {'range': {'timestamp': {'gte': begin_at, 'lt': end_at}}}
-                ],
-                'should': [
-                    {'range': {'backend_status_code': {'gte': 500}}},
-                    {'range': {'elb_status_code': {'gte': 500}}}
+                'filter': [
+                    RangeClause('timestamp', begin_at, end_at).get_clause(),
+                    RangeClause('elb_status_code', 500).get_clause(),
+                    # Filter out /robots.txt requests
+                    ExistClause('rails.controller#action').get_clause(),
+                    # Filter out https://52.197.62.134 requests
+                    TermClause('domain_name', 'api.thekono.com').get_clause()
                 ]
             }
         }
@@ -73,19 +73,15 @@ def query_server_error_records(begin_time, end_time):
 
     while True:
         body['from'] = offset
-        result = es.search(
-            index=index,
-            body=body,
-            sort='timestamp:asc',
-            size=100,
-        )
+        args = dict(index=index, body=body, sort='timestamp:asc', size=100)
+        result = es_api.search(**args)
         logger.debug(result)
         hits = result.get('hits', {}).get('hits', [])
 
-        if len(hits) == 0:
+        if not hits:
             break
 
-        results.extend(map(lambda h: h['_source'], hits))
+        results.extend([h['_source'] for h in hits])
         offset += len(hits)
 
     return results
@@ -101,10 +97,11 @@ def main():
 
     api_records = query_server_error_records(begin_time, end_time)
 
-    if len(api_records) == 0:
+    if not api_records:
         return
 
-    map(lambda ar: ServerErrorMessage(ar).post(), api_records)
+    for api_record in api_records:
+        ServerErrorMessage(api_record).post()
 
 
 if __name__ == '__main__':
