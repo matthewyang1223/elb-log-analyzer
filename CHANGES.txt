@@ -1,3 +1,8 @@
+0.3.2 / 2018-03-24
+==================
+- Fix boto3 migration bugs.
+- Use futures rather than eventlet.
+
 0.3.1 / 2018-03-23
 ==================
 - Use config file to configure logger.
