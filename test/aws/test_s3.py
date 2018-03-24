@@ -79,3 +79,44 @@ class TestUpload(unittest.TestCase):
             Metadata={'happy': ':)'},
             Key='key_name'
         )
+
+
+class TestDelete(unittest.TestCase):
+
+    @patch(module + '.boto3')
+    def setUp(self, mock_boto_s3_module):
+
+        self.bucket_name = 'qq'
+        self.s3 = S3(self.bucket_name)
+        self.s3.client = MagicMock()
+
+    def test_call(self):
+
+        self.s3.delete('key_name')
+        self.s3.client.delete_object.assert_called_with(
+            Bucket=self.bucket_name,
+            Key='key_name'
+        )
+
+
+class TestList(unittest.TestCase):
+
+    @patch(module + '.boto3')
+    def setUp(self, mock_boto_s3_module):
+
+        self.bucket_name = 'qq'
+        self.s3 = S3(self.bucket_name)
+        self.s3.client = MagicMock()
+        self.s3.client.get_paginator.return_value.paginate.return_value = [
+            {'Contents': [{'Key': 'key1'}, {'Key': 'key2'}]}
+        ]
+
+    def test_call(self):
+
+        self.assertEqual(list(self.s3.list('prefix')), ['key1', 'key2'])
+        self.s3.client.get_paginator.assert_called_with('list_objects_v2')
+        self.s3.client.get_paginator.return_value.paginate.assert_called_with(
+            Bucket='qq',
+            Prefix='prefix',
+            PaginationConfig={'PageSize': 1000}
+        )
