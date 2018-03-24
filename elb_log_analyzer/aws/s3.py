@@ -59,6 +59,25 @@ class S3(object):
             self.client.put_object(**params)
             logger.info('Upload %s -> %s', filename, key)
 
+    def delete(self, key_name):
+
+        self.client.delete_object(Bucket=self.bucket, Key=key_name)
+        logger.info('Delete %s', key_name)
+
+    def list(self, key_prefix):
+
+        paginator = self.client.get_paginator('list_objects_v2')
+        params = {
+            'Bucket': self.bucket,
+            'Prefix': key_prefix,
+            'PaginationConfig': {'PageSize': 1000}
+        }
+        iterator = paginator.paginate(**params)
+
+        for page in iterator:
+            for content in page['Contents']:
+                yield content['Key']
+
 
 if __name__ == '__main__':
 
