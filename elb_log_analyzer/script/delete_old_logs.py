@@ -39,7 +39,7 @@ def delete_archived_log(target_date):
     s3 = S3(setting.get('elb_log_s3', 'bucket'))
     prefix = os.path.join(setting.get('elb_log_s3', 'archived_log_key_prefix'))
     key_name = os.path.join(prefix, '%s.zip' % target_date)
-    s3.bucket.delete_key(key_name)
+    s3.delete(key_name)
     logger.info('Delete object: %s', key_name)
 
 
