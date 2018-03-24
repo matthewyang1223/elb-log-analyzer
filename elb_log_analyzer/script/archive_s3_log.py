@@ -15,18 +15,15 @@ import os.path
 from tempfile import NamedTemporaryFile
 
 # third party related imports
-from eventlet import import_patched
-from eventlet import GreenPool
+from concurrent import futures
 
 # local library imports
+from elb_log_analyzer.aws.s3 import S3
 from elb_log_analyzer.component.measure_time import measure_time
 from elb_log_analyzer.component.temp_dir import TempDir
 from elb_log_analyzer.component.zip_compressor import ZipCompressor
 from elb_log_analyzer.config import setting
 from elb_log_analyzer.logger import logger
-
-
-S3 = import_patched('elb_log_analyzer.aws.s3').S3
 
 
 def init_arg_parser():
@@ -59,11 +56,13 @@ def download_logs_of_a_date(log_date, output_folder):
     key_prefix = setting.get('elb_log_s3', 'log_key_prefix')
     key_prefix = ''.join([key_prefix, log_date.strftime('%Y/%m/%d')])
     s3 = S3(setting.get('elb_log_s3', 'bucket'))
-    key_names = [k.name for k in s3.bucket.list(key_prefix)]
-    pool = GreenPool(10)
-    download_fn = lambda key_name: download_log(s3, key_name, output_folder)
+    key_names = []
 
-    list(pool.imap(download_fn, key_names))
+    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for key_name in s3.list(key_prefix):
+            executor.submit(download_log, s3, key_name, output_folder)
+            key_names.append(key_name)
+
     logger.info('Download all logs on %s', log_date.isoformat())
     return key_names
 
@@ -80,7 +79,11 @@ def upload_to_s3(filename, log_date):
 def delete_logs(key_names):
 
     s3 = S3(setting.get('elb_log_s3', 'bucket'))
-    s3.bucket.delete_keys(key_names, quiet=True)
+
+    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for key_name in key_names:
+            executor.submit(s3.delete, key_name)
+
     logger.info('Delete archived logs')
 
 
@@ -92,7 +95,7 @@ def main():
     with TempDir() as tempdir:
         key_names = download_logs_of_a_date(args.date, tempdir)
 
-        if len(key_names) == 0:
+        if not key_names:
             logger.warn('Cannot find any log on %s', args.date)
             return
 
